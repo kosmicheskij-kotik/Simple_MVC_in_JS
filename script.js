@@ -1,6 +1,15 @@
+/**
+ * @class Model
+ *
+ * Manages the data of the application.
+ */
 class Model {
     constructor() {
         this.todos = JSON.parse(localStorage.getItem('todos')) || [];
+    }
+
+    bindTodoListChanged(callback) {
+        this.onTodoListChanged = callback;
     }
 
     _commit(todos) {
@@ -16,8 +25,8 @@ class Model {
         }
 
         this.todos.push(todo);
+
         this._commit(this.todos);
-        this.onTodoListChanged(this.todos);
     }
 
     // Map through all todos, and replace the text of the todo with the specified id
@@ -27,7 +36,6 @@ class Model {
         );
 
         this._commit(this.todos);
-        this.onTodoListChanged(this.todos);
     }
 
     //Filter a todo out of the array by id
@@ -45,44 +53,37 @@ class Model {
         );
 
         this._commit(this.todos);
-        this.onTodoListChanged(this.todos);
-    }
-
-    bindTodoListChanged(callback) {
-        this.onTodoListChanged = callback;
     }
 }
 
+/**
+ * @class View
+ *
+ * Visual representation of the model.
+ */
 class View {
     constructor() {
         //The root element
         this.app = this.getElement('#root');
-
         //The title of the app
         this.title = this.createElement('h1');
         this.title.textContent = 'Todos';
-
         //The form with a [type='text'] input, and a submit button
         this.form = this.createElement('form');
-
         this.input = this. createElement('input');
         this.input.type = 'text';
         this.input.placeholder = 'Add todo';
         this.input.name = 'todo';
-
         this.submitButton = this.createElement('button');
         this.submitButton.textContent = 'Submit';
-
         //The visual representation of hte todo list 
         this.todoList = this.createElement('ul', 'todo-list');
-
         //Append the input and submit button to the form
         this.form.append(this.input, this.submitButton);
-
         //Append the tittle, form, and todo list to the app
         this.app.append(this.title, this.form, this.todoList);
 
-        this._temporaryTodoText;
+        this._temporaryTodoText = '';
         this._initLocalListeners();
     }
 
@@ -106,6 +107,7 @@ class View {
     //Create an element with an optional CSS class
     createElement(tag, className) {
         const element = document.createElement(tag);
+
         if (className) element.classList.add(className);
 
         return element;
@@ -119,6 +121,7 @@ class View {
     }
 
     displayTodos(todos) {
+        //Delete all nodes
         while (this.todoList.firstChild) {
             this.todoList.removeChild(this.todoList.firstChild);
         }
@@ -207,6 +210,14 @@ class View {
     }
 }
 
+/**
+ * @class Controller
+ *
+ * Links the user input and the view output.
+ *
+ * @param model
+ * @param view
+ */
 class Controller {
     constructor(model, view) {
         this.model = model;
@@ -219,7 +230,6 @@ class Controller {
         this.view.bindDeleteTodo(this.handleDeleteTodo);
         this.view.bindToggleTodo(this.handleToggleTodo);
         this.view.bindEditTodo(this.handleEditTodo);
-
         this.model.bindTodoListChanged(this.onTodoListChanged);
     }
 
